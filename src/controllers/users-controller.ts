@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "@/database/prisma";
-import { AppError } from "@/middlewares/utils/AppError";
+import { AppError } from "../utils/AppError";
 import { hash } from "bcryptjs";
 import { z } from "zod";
 
