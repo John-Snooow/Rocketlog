@@ -30,8 +30,8 @@ class DeliveryLogsController {
 
     await prisma.deliveryLog.create({
       data: {
-        deliveryId: delivery_id,
-        description
+        deliveryID: delivery_id,
+        descrition: description
       }
     })
     return response.status(201).json()
