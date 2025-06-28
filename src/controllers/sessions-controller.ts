@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { AppError } from "../utils/AppError";
 import { authConfig } from "@/configs/auth";
 import { prisma } from "@/database/prisma";
-import { compare } from "bcryptjs";
+import { compare } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { z } from "zod";
 
