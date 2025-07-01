@@ -13,27 +13,26 @@ class DeliveriesStatusController {
     })
 
     const { id } = paramsSchema.parse(request.params)
-    const {status} = bodySchema.parse(request.body)
+    const { status } = bodySchema.parse(request.body)
 
     await prisma.delivery.update({
-      data:{
-        status
+      data: {
+        status,
       },
-      where:{
-        id
+      where: {
+        id,
       },
     })
 
     await prisma.deliveryLog.create({
-      data:{
-        deliveryID: id,
-        descrition: status,
-      }
+      data: {
+        deliveryId: id,
+        description: status,
+      },
     })
-    
+
     return response.json()
   }
- 
 }
 
 export { DeliveriesStatusController }
