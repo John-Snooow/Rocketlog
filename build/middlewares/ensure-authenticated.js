@@ -1,2 +1,79 @@
-"use strict";var a=Object.defineProperty;var d=Object.getOwnPropertyDescriptor;var h=Object.getOwnPropertyNames;var g=Object.prototype.hasOwnProperty;var T=(t,e)=>{for(var o in e)a(t,o,{get:e[o],enumerable:!0})},l=(t,e,o,n)=>{if(e&&typeof e=="object"||typeof e=="function")for(let r of h(e))!g.call(t,r)&&r!==o&&a(t,r,{get:()=>e[r],enumerable:!(n=d(e,r))||n.enumerable});return t};var R=t=>l(a({},"__esModule",{value:!0}),t);var v={};T(v,{ensureAuthenticated:()=>b});module.exports=R(v);var m=require("jsonwebtoken");var s=require("zod"),x=s.z.object({DATABASE_URL:s.z.string().url(),JWT_SECRET:s.z.string(),PORT:s.z.coerce.number().default(3333)}),u=x.parse(process.env);var c={jwt:{secret:u.JWT_SECRET,expiresIn:"1d"}};var i=class{message;statusCode;constructor(e,o=400){this.message=e,this.statusCode=o}};function b(t,e,o){try{let n=t.headers.authorization;if(!n)throw new i("JWT token not found",401);let[,r]=n.split(" "),{role:p,sub:f}=(0,m.verify)(r,c.jwt.secret);return t.user={id:f,role:p},o()}catch{throw new i("Invalid JWT token",401)}}0&&(module.exports={ensureAuthenticated});
-//# sourceMappingURL=ensure-authenticated.js.map
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/middlewares/ensure-authenticated.ts
+var ensure_authenticated_exports = {};
+__export(ensure_authenticated_exports, {
+  ensureAuthenticated: () => ensureAuthenticated
+});
+module.exports = __toCommonJS(ensure_authenticated_exports);
+var import_jsonwebtoken = require("jsonwebtoken");
+
+// src/env.ts
+var import_zod = require("zod");
+var envSchema = import_zod.z.object({
+  DATABASE_URL: import_zod.z.string().url(),
+  JWT_SECRET: import_zod.z.string(),
+  PORT: import_zod.z.coerce.number().default(3333)
+});
+var env = envSchema.parse(process.env);
+
+// src/configs/auth.ts
+var authConfig = {
+  jwt: {
+    secret: env.JWT_SECRET,
+    expiresIn: "1d"
+  }
+};
+
+// src/utils/AppError.ts
+var AppError = class {
+  message;
+  statusCode;
+  constructor(message, statusCode = 400) {
+    this.message = message;
+    this.statusCode = statusCode;
+  }
+};
+
+// src/middlewares/ensure-authenticated.ts
+function ensureAuthenticated(request, response, next) {
+  try {
+    const authHeader = request.headers.authorization;
+    if (!authHeader) {
+      throw new AppError("JWT token not found", 401);
+    }
+    const [, token] = authHeader.split(" ");
+    const { role, sub: user_id } = (0, import_jsonwebtoken.verify)(
+      token,
+      authConfig.jwt.secret
+    );
+    request.user = {
+      id: user_id,
+      role
+    };
+    return next();
+  } catch (error) {
+    throw new AppError("Invalid JWT token", 401);
+  }
+}
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  ensureAuthenticated
+});

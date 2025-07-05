@@ -1,2 +1,320 @@
-"use strict";var E=Object.defineProperty;var K=Object.getOwnPropertyDescriptor;var Q=Object.getOwnPropertyNames;var X=Object.prototype.hasOwnProperty;var Y=(t,e)=>{for(var r in e)E(t,r,{get:e[r],enumerable:!0})},Z=(t,e,r,s)=>{if(e&&typeof e=="object"||typeof e=="function")for(let o of Q(e))!X.call(t,o)&&o!==r&&E(t,o,{get:()=>e[o],enumerable:!(s=K(e,o))||s.enumerable});return t};var $=t=>Z(E({},"__esModule",{value:!0}),t);var te={};Y(te,{routes:()=>h});module.exports=$(te);var H=require("express");var W=require("express");var i=class{message;statusCode;constructor(e,r=400){this.message=e,this.statusCode=r}};var U=require("@prisma/client"),m=new U.PrismaClient({log:process.env.NODE_ENV==="production"?[]:["query"]});var P=require("bcrypt"),d=require("zod"),y=class{async create(e,r){let s=d.z.object({name:d.z.string().trim().min(2),email:d.z.string().email(),password:d.z.string().min(6)}),{name:o,email:n,password:a}=s.parse(e.body);if(await m.user.findFirst({where:{email:n}}))throw new i("User with same email already exists");let A=await(0,P.hash)(a,8),C=await m.user.create({data:{name:o,email:n,password:A}}),{password:T,...I}=C;return r.status(201).json(I)}};var _=(0,W.Router)(),ee=new y;_.post("/",ee.create);var N=require("express");var c=require("zod"),re=c.z.object({DATABASE_URL:c.z.string().url(),JWT_SECRET:c.z.string(),PORT:c.z.coerce.number().default(3333)}),k=re.parse(process.env);var R={jwt:{secret:k.JWT_SECRET,expiresIn:"1d"}};var F=require("jsonwebtoken"),L=require("bcrypt"),v=require("zod"),g=class{async create(e,r){let s=v.z.object({email:v.z.string().email(),password:v.z.string().min(6)}),{email:o,password:n}=s.parse(e.body),a=await m.user.findFirst({where:{email:o}});if(!a)throw new i("Invalid email or password",401);if(!await(0,L.compare)(n,a.password))throw new i("Invalid email or password",401);let{secret:A,expiresIn:C}=R.jwt,T=(0,F.sign)({role:a.role??"customer"},A,{subject:a.id,expiresIn:C}),{password:I,...G}=a;return r.json({token:T,user:G})}};var z=(0,N.Router)(),se=new g;z.post("/",se.create);var M=require("express");var b=require("zod"),x=class{async create(e,r){let s=b.z.object({user_id:b.z.string().uuid(),description:b.z.string()}),{user_id:o,description:n}=s.parse(e.body);return await m.delivery.create({data:{userId:o,description:n}}),r.status(201).json()}async index(e,r){let s=await m.delivery.findMany({include:{user:{select:{name:!0,email:!0}}}});return r.json(s)}};var l=require("zod"),j=class{async update(e,r){let s=l.z.object({id:l.z.string().uuid()}),o=l.z.object({status:l.z.enum(["processing","shipped","delivered"])}),{id:n}=s.parse(e.params),{status:a}=o.parse(e.body);return await m.delivery.update({data:{status:a},where:{id:n}}),await m.deliveryLog.create({data:{deliveryId:n,description:a}}),r.json()}};var J=require("jsonwebtoken");function f(t,e,r){try{let s=t.headers.authorization;if(!s)throw new i("JWT token not found",401);let[,o]=s.split(" "),{role:n,sub:a}=(0,J.verify)(o,R.jwt.secret);return t.user={id:a,role:n},r()}catch{throw new i("Invalid JWT token",401)}}function w(t){return(e,r,s)=>{if(!e.user)throw new i("Unauthorized",401);if(!t.includes(e.user.role))throw new i("Unauthorized",401);return s()}}var p=(0,M.Router)(),D=new x,oe=new j;p.use(f,w(["sale"]));p.post("/",D.create);p.get("/",D.index);p.patch("/:id/status",oe.update);var O=require("express");var u=require("zod"),q=class{async create(e,r){let s=u.z.object({delivery_id:u.z.string().uuid(),description:u.z.string()}),{delivery_id:o,description:n}=s.parse(e.body),a=await m.delivery.findUnique({where:{id:o}});if(!a)throw new i("delivery not found",404);if(a.status==="delivered")throw new i("this order has already been delivered");if(a.status==="processing")throw new i("change status to shipped");return await m.deliveryLog.create({data:{deliveryId:o,description:n}}),r.status(201).json()}async show(e,r){let s=u.z.object({delivery_id:u.z.string().uuid()}),{delivery_id:o}=s.parse(e.params),n=await m.delivery.findUnique({where:{id:o},include:{user:!0,logs:!0}});if(e.user?.role==="customer"&&e.user.id!==n?.userId)throw new i("the user can only view their deliveries",401);return r.json(n)}};var S=(0,O.Router)(),B=new q;S.post("/",f,w(["sale"]),B.create);S.get("/:delivery_id/show",f,w(["sale","customer"]),B.show);var h=(0,H.Router)();h.use("/users",_);h.use("/sessions",z);h.use("/deliveries",p);h.use("/delivery-logs",S);0&&(module.exports={routes});
-//# sourceMappingURL=index.js.map
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/routes/index.ts
+var routes_exports = {};
+__export(routes_exports, {
+  routes: () => routes
+});
+module.exports = __toCommonJS(routes_exports);
+var import_express5 = require("express");
+
+// src/routes/users-routes.ts
+var import_express = require("express");
+
+// src/utils/AppError.ts
+var AppError = class {
+  message;
+  statusCode;
+  constructor(message, statusCode = 400) {
+    this.message = message;
+    this.statusCode = statusCode;
+  }
+};
+
+// src/database/prisma.ts
+var import_client = require("@prisma/client");
+var prisma = new import_client.PrismaClient({
+  log: process.env.NODE_ENV === "production" ? [] : ["query"]
+});
+
+// src/controllers/users-controller.ts
+var import_bcrypt = require("bcrypt");
+var import_zod = require("zod");
+var UsersController = class {
+  async create(request, response) {
+    const bodySchema = import_zod.z.object({
+      name: import_zod.z.string().trim().min(2),
+      email: import_zod.z.string().email(),
+      password: import_zod.z.string().min(6)
+    });
+    const { name, email, password } = bodySchema.parse(request.body);
+    const userWithSameEmail = await prisma.user.findFirst({ where: { email } });
+    if (userWithSameEmail) {
+      throw new AppError("User with same email already exists");
+    }
+    const hashedPassword = await (0, import_bcrypt.hash)(password, 8);
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword
+      }
+    });
+    const { password: _, ...userWithoutPassword } = user;
+    return response.status(201).json(userWithoutPassword);
+  }
+};
+
+// src/routes/users-routes.ts
+var usersRoutes = (0, import_express.Router)();
+var usersController = new UsersController();
+usersRoutes.post("/", usersController.create);
+
+// src/routes/sessions-routes.ts
+var import_express2 = require("express");
+
+// src/env.ts
+var import_zod2 = require("zod");
+var envSchema = import_zod2.z.object({
+  DATABASE_URL: import_zod2.z.string().url(),
+  JWT_SECRET: import_zod2.z.string(),
+  PORT: import_zod2.z.coerce.number().default(3333)
+});
+var env = envSchema.parse(process.env);
+
+// src/configs/auth.ts
+var authConfig = {
+  jwt: {
+    secret: env.JWT_SECRET,
+    expiresIn: "1d"
+  }
+};
+
+// src/controllers/sessions-controller.ts
+var import_jsonwebtoken = require("jsonwebtoken");
+var import_bcrypt2 = require("bcrypt");
+var import_zod3 = require("zod");
+var SessionsController = class {
+  async create(request, response) {
+    const bodySchema = import_zod3.z.object({
+      email: import_zod3.z.string().email(),
+      password: import_zod3.z.string().min(6)
+    });
+    const { email, password } = bodySchema.parse(request.body);
+    const user = await prisma.user.findFirst({
+      where: { email }
+    });
+    if (!user) {
+      throw new AppError("Invalid email or password", 401);
+    }
+    const passwordMatched = await (0, import_bcrypt2.compare)(password, user.password);
+    if (!passwordMatched) {
+      throw new AppError("Invalid email or password", 401);
+    }
+    const { secret, expiresIn } = authConfig.jwt;
+    const token = (0, import_jsonwebtoken.sign)({ role: user.role ?? "customer" }, secret, {
+      subject: user.id,
+      expiresIn
+    });
+    const { password: hashedPassword, ...userWithoutPassword } = user;
+    return response.json({ token, user: userWithoutPassword });
+  }
+};
+
+// src/routes/sessions-routes.ts
+var sessionsRoutes = (0, import_express2.Router)();
+var sessionsController = new SessionsController();
+sessionsRoutes.post("/", sessionsController.create);
+
+// src/routes/deliveries-routes.ts
+var import_express3 = require("express");
+
+// src/controllers/deliveries-controller.ts
+var import_zod4 = require("zod");
+var DeliveriesController = class {
+  async create(request, response) {
+    const bodySchema = import_zod4.z.object({
+      user_id: import_zod4.z.string().uuid(),
+      description: import_zod4.z.string()
+    });
+    const { user_id, description } = bodySchema.parse(request.body);
+    await prisma.delivery.create({
+      data: {
+        userId: user_id,
+        description
+      }
+    });
+    return response.status(201).json();
+  }
+  async index(request, response) {
+    const deliveries = await prisma.delivery.findMany({
+      include: {
+        user: { select: { name: true, email: true } }
+      }
+    });
+    return response.json(deliveries);
+  }
+};
+
+// src/controllers/deliveries-status-controller.ts
+var import_zod5 = require("zod");
+var DeliveriesStatusController = class {
+  async update(request, response) {
+    const paramsSchema = import_zod5.z.object({
+      id: import_zod5.z.string().uuid()
+    });
+    const bodySchema = import_zod5.z.object({
+      status: import_zod5.z.enum(["processing", "shipped", "delivered"])
+    });
+    const { id } = paramsSchema.parse(request.params);
+    const { status } = bodySchema.parse(request.body);
+    await prisma.delivery.update({
+      data: {
+        status
+      },
+      where: {
+        id
+      }
+    });
+    await prisma.deliveryLog.create({
+      data: {
+        deliveryId: id,
+        description: status
+      }
+    });
+    return response.json();
+  }
+};
+
+// src/middlewares/ensure-authenticated.ts
+var import_jsonwebtoken2 = require("jsonwebtoken");
+function ensureAuthenticated(request, response, next) {
+  try {
+    const authHeader = request.headers.authorization;
+    if (!authHeader) {
+      throw new AppError("JWT token not found", 401);
+    }
+    const [, token] = authHeader.split(" ");
+    const { role, sub: user_id } = (0, import_jsonwebtoken2.verify)(
+      token,
+      authConfig.jwt.secret
+    );
+    request.user = {
+      id: user_id,
+      role
+    };
+    return next();
+  } catch (error) {
+    throw new AppError("Invalid JWT token", 401);
+  }
+}
+
+// src/middlewares/verifyUserAuthorization.ts
+function verifyUserAuthorization(role) {
+  return (request, response, next) => {
+    if (!request.user) {
+      throw new AppError("Unauthorized", 401);
+    }
+    if (!role.includes(request.user.role)) {
+      throw new AppError("Unauthorized", 401);
+    }
+    return next();
+  };
+}
+
+// src/routes/deliveries-routes.ts
+var deliveriesRoutes = (0, import_express3.Router)();
+var deliveriesController = new DeliveriesController();
+var deliveriesStatusController = new DeliveriesStatusController();
+deliveriesRoutes.use(ensureAuthenticated, verifyUserAuthorization(["sale"]));
+deliveriesRoutes.post("/", deliveriesController.create);
+deliveriesRoutes.get("/", deliveriesController.index);
+deliveriesRoutes.patch("/:id/status", deliveriesStatusController.update);
+
+// src/routes/delivery-logs-routes.ts
+var import_express4 = require("express");
+
+// src/controllers/delivery-logs-controller.ts
+var import_zod6 = require("zod");
+var DeliveryLogsController = class {
+  async create(request, response) {
+    const bodySchema = import_zod6.z.object({
+      delivery_id: import_zod6.z.string().uuid(),
+      description: import_zod6.z.string()
+    });
+    const { delivery_id, description } = bodySchema.parse(request.body);
+    const delivery = await prisma.delivery.findUnique({
+      where: { id: delivery_id }
+    });
+    if (!delivery) {
+      throw new AppError("delivery not found", 404);
+    }
+    if (delivery.status === "delivered") {
+      throw new AppError("this order has already been delivered");
+    }
+    if (delivery.status === "processing") {
+      throw new AppError("change status to shipped");
+    }
+    await prisma.deliveryLog.create({
+      data: {
+        deliveryId: delivery_id,
+        description
+      }
+    });
+    return response.status(201).json();
+  }
+  async show(request, response) {
+    const paramsSchema = import_zod6.z.object({
+      delivery_id: import_zod6.z.string().uuid()
+    });
+    const { delivery_id } = paramsSchema.parse(request.params);
+    const delivery = await prisma.delivery.findUnique({
+      where: { id: delivery_id },
+      include: {
+        user: true,
+        logs: true
+      }
+    });
+    if (!delivery) {
+      return response.status(404).json({ message: "delivery not found" });
+    }
+    if (request.user?.role === "customer" && request.user.id !== delivery?.userId) {
+      throw new AppError("the user can only view their deliveries", 401);
+    }
+    return response.json(delivery);
+  }
+};
+
+// src/routes/delivery-logs-routes.ts
+var deliveryLogsRoutes = (0, import_express4.Router)();
+var deliveryLogsController = new DeliveryLogsController();
+deliveryLogsRoutes.post(
+  "/",
+  ensureAuthenticated,
+  verifyUserAuthorization(["sale"]),
+  deliveryLogsController.create
+);
+deliveryLogsRoutes.get(
+  "/:delivery_id/show",
+  ensureAuthenticated,
+  verifyUserAuthorization(["sale", "customer"]),
+  deliveryLogsController.show
+);
+
+// src/routes/index.ts
+var routes = (0, import_express5.Router)();
+routes.use("/users", usersRoutes);
+routes.use("/sessions", sessionsRoutes);
+routes.use("/deliveries", deliveriesRoutes);
+routes.use("/delivery-logs", deliveryLogsRoutes);
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  routes
+});

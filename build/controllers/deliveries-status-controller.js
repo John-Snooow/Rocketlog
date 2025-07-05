@@ -1,2 +1,65 @@
-"use strict";var p=Object.defineProperty;var u=Object.getOwnPropertyDescriptor;var y=Object.getOwnPropertyNames;var b=Object.prototype.hasOwnProperty;var f=(s,e)=>{for(var r in e)p(s,r,{get:e[r],enumerable:!0})},g=(s,e,r,a)=>{if(e&&typeof e=="object"||typeof e=="function")for(let o of y(e))!b.call(s,o)&&o!==r&&p(s,o,{get:()=>e[o],enumerable:!(a=u(e,o))||a.enumerable});return s};var h=s=>g(p({},"__esModule",{value:!0}),s);var l={};f(l,{DeliveriesStatusController:()=>d});module.exports=h(l);var m=require("@prisma/client"),i=new m.PrismaClient({log:process.env.NODE_ENV==="production"?[]:["query"]});var t=require("zod"),d=class{async update(e,r){let a=t.z.object({id:t.z.string().uuid()}),o=t.z.object({status:t.z.enum(["processing","shipped","delivered"])}),{id:n}=a.parse(e.params),{status:c}=o.parse(e.body);return await i.delivery.update({data:{status:c},where:{id:n}}),await i.deliveryLog.create({data:{deliveryId:n,description:c}}),r.json()}};0&&(module.exports={DeliveriesStatusController});
-//# sourceMappingURL=deliveries-status-controller.js.map
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/controllers/deliveries-status-controller.ts
+var deliveries_status_controller_exports = {};
+__export(deliveries_status_controller_exports, {
+  DeliveriesStatusController: () => DeliveriesStatusController
+});
+module.exports = __toCommonJS(deliveries_status_controller_exports);
+
+// src/database/prisma.ts
+var import_client = require("@prisma/client");
+var prisma = new import_client.PrismaClient({
+  log: process.env.NODE_ENV === "production" ? [] : ["query"]
+});
+
+// src/controllers/deliveries-status-controller.ts
+var import_zod = require("zod");
+var DeliveriesStatusController = class {
+  async update(request, response) {
+    const paramsSchema = import_zod.z.object({
+      id: import_zod.z.string().uuid()
+    });
+    const bodySchema = import_zod.z.object({
+      status: import_zod.z.enum(["processing", "shipped", "delivered"])
+    });
+    const { id } = paramsSchema.parse(request.params);
+    const { status } = bodySchema.parse(request.body);
+    await prisma.delivery.update({
+      data: {
+        status
+      },
+      where: {
+        id
+      }
+    });
+    await prisma.deliveryLog.create({
+      data: {
+        deliveryId: id,
+        description: status
+      }
+    });
+    return response.json();
+  }
+};
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  DeliveriesStatusController
+});
